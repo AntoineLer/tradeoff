@@ -21,11 +21,11 @@ def make_data(n_samples, n_sets, random_state=None):
     return (x_train, y_train, x_test, y_test)
 
 def linear_model(x_train, y_train, x_test, y_test, residual_error):
-    linear_estimators = [Ridge().fit(x.reshape(-1, 1), y) for x, y in zip(x_train, y_train)]
+    linear_estimators = [LinearRegression().fit(x.reshape(-1, 1), y) for x, y in zip(x_train, y_train)]
     linear_prediction = [estimator.predict(x_test.reshape(-1, 1)) for estimator in linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
-    squared_bias = (f(x_test) - np.mean(linear_prediction, 0))
+    squared_bias = (f(x_test) - np.mean(linear_prediction, 0))**2
     variance = np.var(linear_prediction, 0)
     tradeoff = noise + squared_bias + variance
 
@@ -37,8 +37,26 @@ def linear_model(x_train, y_train, x_test, y_test, residual_error):
     plt.xlabel("x")
     plt.ylabel("Error")
     plt.legend()
-    plt.savefig("tradeoff_Q_d.pdf")
-    return
+    plt.savefig("tradeoff_Q_d_linear.pdf")
+
+def non_linear_model(x_train, y_train, x_test, y_test, residual_error):
+    linear_estimators = [KNeighborsRegressor(n_neighbors=75).fit(x.reshape(-1, 1), y) for x, y in zip(x_train, y_train)]
+    linear_prediction = [estimator.predict(x_test.reshape(-1, 1)) for estimator in linear_estimators]
+
+    noise = np.full(x_train.shape[1], residual_error)
+    squared_bias = (f(x_test) - np.mean(linear_prediction, 0))**2
+    variance = np.var(linear_prediction, 0)
+    tradeoff = noise + squared_bias + variance
+
+    plt.figure()
+    plt.plot(x_test, tradeoff, label = "Expected error")
+    plt.plot(x_test, variance, label = "Variance")
+    plt.plot(x_test, noise, label ="Residual Error")
+    plt.plot(x_test, squared_bias, label ="Squared Bias")
+    plt.xlabel("x")
+    plt.ylabel("Error")
+    plt.legend()
+    plt.savefig("tradeoff_Q_d_non_linear.pdf")
 
 def noise(x, y):
     residual_error = []
@@ -55,3 +73,4 @@ if __name__ == "__main__":
     residual_error = noise(x_train, y_train)
 
     linear_model(x_train, y_train, x_test, y_test, residual_error)
+    non_linear_model(x_train, y_train, x_test, y_test, residual_error)
