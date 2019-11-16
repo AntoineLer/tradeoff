@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.utils import check_random_state
 
 def f(X):
@@ -21,17 +21,17 @@ def make_data(n_samples, n_sets, random_state=None):
     return (x_train, y_train, x_test, y_test)
 
 def linear_model(x_train, y_train, x_test, y_test, residual_error):
-    linear_estimators = [LinearRegression().fit(x.reshape(-1, 1), y) for x, y in zip(x_train, y_train)]
+    linear_estimators = [Ridge().fit(x.reshape(-1, 1), y) for x, y in zip(x_train, y_train)]
     linear_prediction = [estimator.predict(x_test.reshape(-1, 1)) for estimator in linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
     squared_bias = (f(x_test) - np.mean(linear_prediction, 0))
     variance = np.var(linear_prediction, 0)
     tradeoff = noise + squared_bias + variance
-
+    print(variance)
     plt.figure()
-    plt.plot(x_test, tradeoff, label = "expected error")
-    plt.plot(x_test, variance, label = "variance")
+    plt.plot(x_test, tradeoff, label = "Expected error")
+    plt.plot(x_test, variance, label = "Variance")
     plt.plot(x_test, noise, label ="Residual Error")
     plt.plot(x_test, squared_bias, label ="Squared Bias")
     plt.xlabel("x")
