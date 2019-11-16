@@ -2,19 +2,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
+from sklearn.utils import check_random_state
 
-def make_data(n_samples, random_state=None):
-    x = np.sort(np.random.uniform(-10, 10, size=n_samples))
-    epsilon = np.random.normal(0, 1, n_samples)*0.1
-    function = np.sin(x) * np.exp((-x**2)/16)
-    y = function + epsilon
-    true_y = function
-    plt.figure()
-    plt.plot(x, y)
-    plt.savefig("bite")
-    return x, y, true_y
+def make_data(n_samples, n_sets, random_state=None):
+    random = check_random_state(random_state)
+    x_r = np.sort(random.uniform(-10, 10, (n_samples,)))
+    #Function f(x)
+    function = np.sin(x_r) * np.exp((-x_r**2)/16)
+    y = np.zeros((n_sets, n_samples))
+    for index in range(y.shape[0]):
+        y[index, :] = function + 0.1*random.normal(0, 1, n_samples)
+    return (x_r, y)
 
 if __name__ == "__main__":
-    print("Hello world")
-    print("tg")
-    make_data(1000)
+    n_samples = 1000
+    n_sets = 50
+    (x, y) = make_data(n_samples, n_sets)
+    print(np.var(y,0))
