@@ -28,7 +28,7 @@ def linear_model(x_train, y_train, x_test, y_test, residual_error):
     squared_bias = (f(x_test) - np.mean(linear_prediction, 0))
     variance = np.var(linear_prediction, 0)
     tradeoff = noise + squared_bias + variance
-    print(variance)
+
     plt.figure()
     plt.plot(x_test, tradeoff, label = "Expected error")
     plt.plot(x_test, variance, label = "Variance")
