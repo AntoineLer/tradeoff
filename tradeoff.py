@@ -4,10 +4,8 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.utils import check_random_state
 
-
 def f(X):
     return np.sin(X) * np.exp((-X**2)/16)
-
 
 def make_data(n_samples, n_sets, random_state=None):
     random = check_random_state(random_state)
@@ -23,7 +21,7 @@ def make_data(n_samples, n_sets, random_state=None):
     return (x_train, y_train, x_test, y_test)
 
 
-def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables):
+def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False):
     linear_estimators = [LinearRegression().fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
     linear_prediction = [estimator.predict(add_irrelevant_variables(
@@ -32,39 +30,43 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
     noise = np.full(x_train.shape[1], residual_error)
     squared_bias = compute_squared_bias(x_test, linear_prediction)
     variance = compute_variance(linear_prediction)
-    tradeoff = noise + squared_bias + variance
+    error = noise + squared_bias + variance
 
-    plt.figure()
-    plt.plot(x_test, tradeoff, label="Expected error")
-    plt.plot(x_test, variance, label="Variance")
-    plt.plot(x_test, noise, label="Residual Error")
-    plt.plot(x_test, squared_bias, label="Squared Bias")
-    plt.xlabel("x")
-    plt.ylabel("Error")
-    plt.legend()
-    plt.savefig("tradeoff_Q_d_linear.pdf")
+    if plot:
+        plt.figure()
+        plt.plot(x_test, error, label="Expected error")
+        plt.plot(x_test, variance, label="Variance")
+        plt.plot(x_test, noise, label="Residual Error")
+        plt.plot(x_test, squared_bias, label="Squared Bias")
+        plt.xlabel("x")
+        plt.ylabel("Error")
+        plt.legend()
+        plt.savefig("tradeoff_Q_d_linear.pdf")
+    return (noise, squared_bias, variance, error)
 
 
-def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables):
-    non_linear_estimators = [KNeighborsRegressor(n_neighbors=50).fit(add_irrelevant_variables(
+def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False):
+    non_linear_estimators = [KNeighborsRegressor(n_neighbors=5).fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
-    non_linear_prediction = [estimator.predict(add_irrelevant_variables(
-        x_test, number_irrelevant_variables)) for estimator in non_linear_estimators]
+    x_test_irrelevante_variable = add_irrelevant_variables(x_test, number_irrelevant_variables)
+    non_linear_prediction = [estimator.predict(x_test_irrelevante_variable) for estimator in non_linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
     squared_bias = compute_squared_bias(x_test, non_linear_prediction)
     variance = compute_variance(non_linear_prediction)
-    tradeoff = noise + squared_bias + variance
+    error = noise + squared_bias + variance
 
-    plt.figure()
-    plt.plot(x_test, tradeoff, label="Expected error")
-    plt.plot(x_test, variance, label="Variance")
-    plt.plot(x_test, noise, label="Residual Error")
-    plt.plot(x_test, squared_bias, label="Squared Bias")
-    plt.xlabel("x")
-    plt.ylabel("Error")
-    plt.legend()
-    plt.savefig("tradeoff_Q_d_non_linear.pdf")
+    if plot:
+        plt.figure()
+        plt.plot(x_test, error, label="Expected error")
+        plt.plot(x_test, variance, label="Variance")
+        plt.plot(x_test, noise, label="Residual Error")
+        plt.plot(x_test, squared_bias, label="Squared Bias")
+        plt.xlabel("x")
+        plt.ylabel("Error")
+        plt.legend()
+        plt.savefig("tradeoff_Q_d_non_linear.pdf")
+    return (noise, squared_bias, variance, error)
 
 def compute_variance(predictions):
     return np.var(predictions, 0)
@@ -100,6 +102,6 @@ if __name__ == "__main__":
     residual_error = compute_noise(x_train, y_train)
 
     linear_model(x_train, y_train, x_test, residual_error,
-                 number_irrelevant_variables)
+                 number_irrelevant_variables, plot=True)
     non_linear_model(x_train, y_train, x_test, residual_error,
-                     number_irrelevant_variables)
+                     number_irrelevant_variables, plot=True)
