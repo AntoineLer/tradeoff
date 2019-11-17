@@ -90,13 +90,19 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
         # alpha = 0 is the same as a LinearRegression
         linear_estimators = [LinearRegression().fit(add_irrelevant_variables(
             x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
-        linear_prediction = [estimator.predict(add_irrelevant_variables(
-            x_test, number_irrelevant_variables)) for estimator in linear_estimators]
+
+        x_test_irrelevante_variable = add_irrelevant_variables(
+        x_test, number_irrelevant_variables, zeros=True)
+
+        linear_prediction = [estimator.predict(x_test_irrelevante_variable) for estimator in linear_estimators]
     else:
         linear_estimators = [Lasso(alpha=alpha).fit(add_irrelevant_variables(
             x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
-        linear_prediction = [estimator.predict(add_irrelevant_variables(
-            x_test, number_irrelevant_variables)) for estimator in linear_estimators]
+
+        x_test_irrelevante_variable = add_irrelevant_variables(
+        x_test, number_irrelevant_variables, zeros=True)
+
+        linear_prediction = [estimator.predict(x_test_irrelevante_variable) for estimator in linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
     squared_bias = compute_squared_bias(x_test, linear_prediction)
@@ -149,8 +155,10 @@ def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant
     """
     non_linear_estimators = [KNeighborsRegressor(n_neighbors=n_neighbors).fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
+
     x_test_irrelevante_variable = add_irrelevant_variables(
-        x_test, number_irrelevant_variables)
+        x_test, number_irrelevant_variables, zeros=True)
+
     non_linear_prediction = [estimator.predict(
         x_test_irrelevante_variable) for estimator in non_linear_estimators]
 
@@ -225,7 +233,7 @@ def compute_noise(x, y):
     return np.mean(np.array(residual_error))
 
 
-def add_irrelevant_variables(X, number_irrelevant_variables, random_state=None):
+def add_irrelevant_variables(X, number_irrelevant_variables, random_state=None, zeros=False):
     """
     Add a number "number_irrelevant_variables"  of irrelevant variables to the problem defined by the initial input values X.
 
@@ -246,11 +254,18 @@ def add_irrelevant_variables(X, number_irrelevant_variables, random_state=None):
     """
     if number_irrelevant_variables == 0:
         return X.reshape(-1, 1)
-    random = check_random_state(random_state)
-    variables = np.zeros((X.shape[0], 1 + number_irrelevant_variables))
-    for i in range(X.shape[0]):
-        variables[i] = np.concatenate(
-            ([X[i]], random.uniform(-10, 10, number_irrelevant_variables)))
+
+    if zeros:
+        variables = np.zeros((X.shape[0], 1 + number_irrelevant_variables))
+        for i in range(X.shape[0]):
+            variables[i] = np.concatenate(
+                ([X[i]], [0 for _ in range(number_irrelevant_variables)]))
+    else:
+        random = check_random_state(random_state)
+        variables = np.zeros((X.shape[0], 1 + number_irrelevant_variables))
+        for i in range(X.shape[0]):
+            variables[i] = np.concatenate(
+                ([X[i]], random.uniform(-10, 10, number_irrelevant_variables)))
     return variables.reshape(-1, 1 + number_irrelevant_variables)
 
 
@@ -555,7 +570,6 @@ if __name__ == "__main__":
     test error
     """
     compute_error(n_samples, n_sets, number_irrelevant_variables, alpha=8)
-
     """
     LS size
     """
