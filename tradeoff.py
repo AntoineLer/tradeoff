@@ -51,7 +51,7 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
     return (noise, squared_bias, variance, error)
 
 
-def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False, n_neighbors=5):
+def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False, n_neighbors=1):
     non_linear_estimators = [KNeighborsRegressor(n_neighbors=n_neighbors).fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
     x_test_irrelevante_variable = add_irrelevant_variables(x_test, number_irrelevant_variables)
@@ -146,7 +146,7 @@ def mean_size_LS(n_samples, n_sets, number_irrelevant_variables, start):
     plt.xlabel("Learning Sample size")
     plt.ylabel("Mean error")
     plt.legend()
-    plt.savefig("Mean_Linear.pdf")
+    plt.savefig("Mean_LS_Linear.pdf")
 
     plt.figure()
     plt.plot(x, non_linear_error, label="Mean error")
@@ -156,7 +156,7 @@ def mean_size_LS(n_samples, n_sets, number_irrelevant_variables, start):
     plt.xlabel("Learning Sample size")
     plt.ylabel("Mean error")
     plt.legend()
-    plt.savefig("Mean_Non_Linear.pdf")
+    plt.savefig("Mean_LS_Non_Linear.pdf")
 
 def mean_model_complexity(n_samples, n_sets, number_irrelevant_variables, start, end):
     linear_noise = []
@@ -246,7 +246,7 @@ def mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables):
     plt.xlabel("Number of irrelevant variables")
     plt.ylabel("Mean error")
     plt.legend()
-    plt.savefig("Mean_Linear_irr_var.pdf")
+    plt.savefig("Mean_irr_var_Linear.pdf")
 
     plt.figure()
     plt.plot(x, non_linear_error, label="Mean error")
@@ -256,7 +256,7 @@ def mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables):
     plt.xlabel("Number of irrelevant variables")
     plt.ylabel("Mean error")
     plt.legend()
-    plt.savefig("Mean_Non_Linear_irr_var.pdf")
+    plt.savefig("Mean_irr_var_Non_Linear.pdf")
 
 if __name__ == "__main__":
     n_samples = 2000
@@ -265,13 +265,15 @@ if __name__ == "__main__":
 
     compute_error(n_samples, n_sets, number_irrelevant_variables)
 
-    n_samples = 100
+    n_samples = 1000
     start = 1
-    mean_size_LS(250, n_sets, 0, start)
+    mean_size_LS(n_samples, n_sets, 0, start)
 
     start_complexity = 0
     end_complexity = 60
     mean_model_complexity(n_samples, n_sets, 0, start_complexity, end_complexity)
-    
+
+    #decrease n_samples for simplicity and speed
+    n_samples = 200
     number_irrelevant_variables = 75
     mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables)
