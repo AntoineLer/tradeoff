@@ -87,6 +87,7 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
         the total error of the model, computed as the sum of noise, squared bias and variance
     """
     if alpha == 0:
+        # alpha = 0 is the same as a LinearRegression
         linear_estimators = [LinearRegression().fit(add_irrelevant_variables(
             x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
         linear_prediction = [estimator.predict(add_irrelevant_variables(
@@ -337,11 +338,13 @@ def mean_size_LS(n_samples, n_sets, number_irrelevant_variables, start):
         linear_variance.append(np.mean(variance))
         linear_error.append(np.mean(error))
 
+        if size < 10:
+            continue
         """
         Non Linear Regression
         """
         (residual_error, squared_bias, variance, error) = non_linear_model(
-            x_train, y_train, x_test, residual_error, number_irrelevant_variables, n_neighbors=start)
+            x_train, y_train, x_test, residual_error, number_irrelevant_variables, n_neighbors=10)
         non_linear_noise.append(np.mean(residual_error))
         non_linear_squared_bias.append(np.mean(squared_bias))
         non_linear_variance.append(np.mean(variance))
@@ -361,6 +364,7 @@ def mean_size_LS(n_samples, n_sets, number_irrelevant_variables, start):
     plt.legend()
     plt.savefig("Mean_LS_Linear.pdf")
 
+    x = range(start + 9, n_samples)
     plt.figure()
     plt.plot(x, non_linear_error, label="Mean error")
     plt.plot(x, non_linear_variance, label="Mean variance")
@@ -501,7 +505,7 @@ def mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables):
         Linear Regression
         """
         (residual_error, squared_bias, variance, error) = linear_model(
-            x_train, y_train, x_test, residual_error, irr_var)
+            x_train, y_train, x_test, residual_error, irr_var, alpha=3)
         linear_noise.append(np.mean(residual_error))
         linear_squared_bias.append(np.mean(squared_bias))
         linear_variance.append(np.mean(variance))
@@ -556,7 +560,7 @@ if __name__ == "__main__":
     LS size
     """
     # decrease n_samples for simplicity in the plots
-    n_samples = 100
+    n_samples = 150
     start = 1
     mean_size_LS(n_samples, n_sets, 0, start)
 
