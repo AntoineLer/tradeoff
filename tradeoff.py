@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.utils import check_random_state
 
 def f(X):
@@ -28,7 +28,7 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
         linear_prediction = [estimator.predict(add_irrelevant_variables(
             x_test, number_irrelevant_variables)) for estimator in linear_estimators]
     else:
-        linear_estimators = [Ridge(alpha=5).fit(add_irrelevant_variables(
+        linear_estimators = [Lasso(alpha=alpha).fit(add_irrelevant_variables(
             x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
         linear_prediction = [estimator.predict(add_irrelevant_variables(
             x_test, number_irrelevant_variables)) for estimator in linear_estimators]
@@ -193,29 +193,89 @@ def mean_model_complexity(n_samples, n_sets, number_irrelevant_variables, start,
     plt.plot(x, linear_variance, label="Mean variance")
     plt.plot(x, linear_noise, label="Mean residual error")
     plt.plot(x, linear_squared_bias, label="Mean squared Bias")
-    plt.xlabel("Learning Sample size")
+    plt.xlabel("Complexity of the Model")
     plt.ylabel("Mean error")
     plt.legend()
     plt.savefig("Mean_Complexity_linear.pdf")
 
+    #Reverse because Knn is more complex when k is small
     x = range(start + 1, end)
     plt.figure()
     plt.plot(x, non_linear_error[::-1], label="Mean error")
     plt.plot(x, non_linear_variance[::-1], label="Mean variance")
     plt.plot(x, non_linear_noise[::-1], label="Mean residual error")
     plt.plot(x, non_linear_squared_bias[::-1], label="Mean squared Bias")
-    plt.xlabel("Learning Sample size")
+    plt.xlabel("Complexity of the Model")
     plt.ylabel("Mean error")
     plt.legend()
     plt.savefig("Mean_Complexity_non_linear.pdf")
+
+def mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables):
+    linear_noise = []
+    linear_squared_bias = []
+    linear_variance = []
+    linear_error = []
+
+    non_linear_noise = []
+    non_linear_squared_bias = []
+    non_linear_variance = []
+    non_linear_error = []
+
+    for irr_var in range(number_irrelevant_variables):
+        (x_train, y_train, x_test, y_test) = make_data(n_samples, n_sets)
+        residual_error = compute_noise(x_train, y_train)
+
+        (residual_error, squared_bias, variance, error) = linear_model(x_train, y_train, x_test, residual_error, irr_var)
+        linear_noise.append(np.mean(residual_error))
+        linear_squared_bias.append(np.mean(squared_bias))
+        linear_variance.append(np.mean(variance))
+        linear_error.append(np.mean(error))
+
+        (residual_error, squared_bias, variance, error) = non_linear_model(x_train, y_train, x_test, residual_error, irr_var)
+        non_linear_noise.append(np.mean(residual_error))
+        non_linear_squared_bias.append(np.mean(squared_bias))
+        non_linear_variance.append(np.mean(variance))
+        non_linear_error.append(np.mean(error))
+
+    x = range(number_irrelevant_variables)
+    plt.figure()
+    plt.plot(x, linear_error, label="Mean error")
+    plt.plot(x, linear_variance, label="Mean variance")
+    plt.plot(x, linear_noise, label="Mean residual error")
+    plt.plot(x, linear_squared_bias, label="Mean squared Bias")
+    plt.xlabel("Number of irrelevant variables")
+    plt.ylabel("Mean error")
+    plt.legend()
+    plt.savefig("Mean_Linear_irr_var.pdf")
+
+    plt.figure()
+    plt.plot(x, non_linear_error, label="Mean error")
+    plt.plot(x, non_linear_variance, label="Mean variance")
+    plt.plot(x, non_linear_noise, label="Mean residual error")
+    plt.plot(x, non_linear_squared_bias, label="Mean squared Bias")
+    plt.xlabel("Number of irrelevant variables")
+    plt.ylabel("Mean error")
+    plt.legend()
+    plt.savefig("Mean_Non_Linear_irr_var.pdf")
 
 if __name__ == "__main__":
     n_samples = 1000
     n_sets = 50
     number_irrelevant_variables = 0
+
+    #'''
+    compute_error(n_samples, n_sets, number_irrelevant_variables)
+    #'''
+
+    #'''
     start = 1
-    #compute_error(n_samples, n_sets, number_irrelevant_variables)
-    #mean_size_LS(250, n_sets, 0, start)
+    mean_size_LS(250, n_sets, 0, start)
+    #'''
+
+    #'''
     start_complexity = 0
     end_complexity = 60
     mean_model_complexity(n_samples, n_sets, 0, start_complexity, end_complexity)
+    #'''
+    number_irrelevant_variables = 50
+    mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables)
