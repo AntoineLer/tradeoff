@@ -51,7 +51,7 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
     return (noise, squared_bias, variance, error)
 
 
-def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False, n_neighbors=1):
+def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables, plot=False, n_neighbors=5):
     non_linear_estimators = [KNeighborsRegressor(n_neighbors=n_neighbors).fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
     x_test_irrelevante_variable = add_irrelevant_variables(x_test, number_irrelevant_variables)
@@ -259,23 +259,19 @@ def mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables):
     plt.savefig("Mean_Non_Linear_irr_var.pdf")
 
 if __name__ == "__main__":
-    n_samples = 1000
+    n_samples = 2000
     n_sets = 50
     number_irrelevant_variables = 0
 
-    #'''
     compute_error(n_samples, n_sets, number_irrelevant_variables)
-    #'''
 
-    #'''
+    n_samples = 100
     start = 1
     mean_size_LS(250, n_sets, 0, start)
-    #'''
 
-    #'''
     start_complexity = 0
     end_complexity = 60
     mean_model_complexity(n_samples, n_sets, 0, start_complexity, end_complexity)
-    #'''
-    number_irrelevant_variables = 50
+    
+    number_irrelevant_variables = 75
     mean_irrelevant_variables(n_samples, n_sets, number_irrelevant_variables)
