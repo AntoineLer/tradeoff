@@ -339,7 +339,7 @@ if __name__ == "__main__":
     test error
     """
     compute_error(n_samples, n_sets, number_irrelevant_variables, alpha=8)
-
+    
     """
     LS size
     """
