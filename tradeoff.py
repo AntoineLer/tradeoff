@@ -30,8 +30,8 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
         x_test, number_irrelevant_variables)) for estimator in linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
-    squared_bias = (f(x_test) - np.mean(linear_prediction, 0))**2
-    variance = np.var(linear_prediction, 0)
+    squared_bias = compute_squared_bias(x_test, linear_prediction)
+    variance = compute_variance(linear_prediction)
     tradeoff = noise + squared_bias + variance
 
     plt.figure()
@@ -46,14 +46,14 @@ def linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_var
 
 
 def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant_variables):
-    linear_estimators = [KNeighborsRegressor(n_neighbors=50).fit(add_irrelevant_variables(
+    non_linear_estimators = [KNeighborsRegressor(n_neighbors=50).fit(add_irrelevant_variables(
         x, number_irrelevant_variables), y) for x, y in zip(x_train, y_train)]
-    linear_prediction = [estimator.predict(add_irrelevant_variables(
-        x_test, number_irrelevant_variables)) for estimator in linear_estimators]
+    non_linear_prediction = [estimator.predict(add_irrelevant_variables(
+        x_test, number_irrelevant_variables)) for estimator in non_linear_estimators]
 
     noise = np.full(x_train.shape[1], residual_error)
-    squared_bias = (f(x_test) - np.mean(linear_prediction, 0))**2
-    variance = np.var(linear_prediction, 0)
+    squared_bias = compute_squared_bias(x_test, non_linear_prediction)
+    variance = compute_variance(non_linear_prediction)
     tradeoff = noise + squared_bias + variance
 
     plt.figure()
@@ -66,13 +66,18 @@ def non_linear_model(x_train, y_train, x_test, residual_error, number_irrelevant
     plt.legend()
     plt.savefig("tradeoff_Q_d_non_linear.pdf")
 
+def compute_variance(predictions):
+    return np.var(predictions, 0)
 
-def noise(x, y):
+def compute_squared_bias(x, prediction):
+    bayes_model = f(x)
+    return (bayes_model - np.mean(prediction, 0))**2
+
+def compute_noise(x, y):
     residual_error = []
-
     for i in range(x.shape[0]):
-        for k in range(x[i].shape[0]):
-            residual_error.append((y[i][k] - f(x[i][k]))**2)
+        bayes_model = f(x[i])
+        residual_error.append((y[i] - bayes_model)**2)
     return np.mean(np.array(residual_error))
 
 
@@ -92,7 +97,7 @@ if __name__ == "__main__":
     n_sets = 50
     number_irrelevant_variables = 0
     (x_train, y_train, x_test, y_test) = make_data(n_samples, n_sets)
-    residual_error = noise(x_train, y_train)
+    residual_error = compute_noise(x_train, y_train)
 
     linear_model(x_train, y_train, x_test, residual_error,
                  number_irrelevant_variables)
